@@ -1,8 +1,8 @@
 # Multi Progress Bar
 
-[![GoDoc](https://pkg.go.dev/badge/github.com/vbauerster/mpb)](https://pkg.go.dev/github.com/vbauerster/mpb/v7)
-[![Test status](https://github.com/vbauerster/mpb/actions/workflows/test.yml/badge.svg)](https://github.com/vbauerster/mpb/actions/workflows/test.yml)
-[![Donate with PayPal](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.me/vbauerster)
+[![GoDoc](https://pkg.go.dev/badge/github.com/zhijian-pro/mpb)](https://pkg.go.dev/github.com/zhijian-pro/mpb/v7)
+[![Test status](https://github.com/zhijian-pro/mpb/actions/workflows/test.yml/badge.svg)](https://github.com/zhijian-pro/mpb/actions/workflows/test.yml)
+[![Donate with PayPal](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.me/zhijian-pro)
 
 **mpb** is a Go lib for rendering progress bars in terminal applications.
 
@@ -26,8 +26,8 @@ import (
     "math/rand"
     "time"
 
-    "github.com/vbauerster/mpb/v7"
-    "github.com/vbauerster/mpb/v7/decor"
+    "github.com/zhijian-pro/mpb/v7"
+    "github.com/zhijian-pro/mpb/v7/decor"
 )
 
 func main() {

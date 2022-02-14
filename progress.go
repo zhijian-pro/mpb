@@ -11,8 +11,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/vbauerster/mpb/v7/cwriter"
-	"github.com/vbauerster/mpb/v7/decor"
+	"github.com/zhijian-pro/mpb/v7/cwriter"
+	"github.com/zhijian-pro/mpb/v7/decor"
 )
 
 const (
@@ -55,14 +55,14 @@ type pState struct {
 
 // New creates new Progress container instance. It's not possible to
 // reuse instance after (*Progress).Wait method has been called.
-func New(options ...ContainerOption) *Progress {
-	return NewWithContext(context.Background(), options...)
+func New(cw *cwriter.Writer, options ...ContainerOption) *Progress {
+	return NewWithContext(context.Background(), cw, options...)
 }
 
 // NewWithContext creates new Progress container instance with provided
 // context. It's not possible to reuse instance after (*Progress).Wait
 // method has been called.
-func NewWithContext(ctx context.Context, options ...ContainerOption) *Progress {
+func NewWithContext(ctx context.Context, cw *cwriter.Writer, options ...ContainerOption) *Progress {
 	s := &pState{
 		bHeap:     priorityQueue{},
 		rr:        prr,
@@ -86,7 +86,8 @@ func NewWithContext(ctx context.Context, options ...ContainerOption) *Progress {
 	}
 
 	p.cwg.Add(1)
-	go p.serve(s, cwriter.New(s.output))
+
+	go p.serve(s, cw)
 	return p
 }
 
