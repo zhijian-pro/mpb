@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 	"strconv"
+	"sync"
 )
 
 // ErrNotTTY not a TeleTYpewriter error.
@@ -13,18 +14,20 @@ var ErrNotTTY = errors.New("not a terminal")
 
 // https://github.com/dylanaraps/pure-sh-bible#cursor-movement
 const (
-	escOpen  = "\x1b["
-	cuuAndEd = "A\x1b[J"
+	EscOpen  = "\x1b["
+	CuuAndEd = "A\x1b[J"
 )
 
 // Writer is a buffered the writer that updates the terminal. The
 // contents of writer will be flushed when Flush is called.
 type Writer struct {
-	out        io.Writer
-	buf        bytes.Buffer
-	lines      int
-	fd         int
-	isTerminal bool
+	sync.Mutex
+	out                io.Writer
+	buf                bytes.Buffer
+	lines              int
+	fd                 int
+	isTerminal         bool
+	LastTypeIsProgress bool
 }
 
 // New returns a new Writer with defaults.
@@ -39,15 +42,18 @@ func New(out io.Writer) *Writer {
 
 // Flush flushes the underlying buffer.
 func (w *Writer) Flush(lines int) (err error) {
+	w.Lock()
+	defer w.Unlock()
 	// some terminals interpret 'cursor up 0' as 'cursor up 1'
-	if w.lines > 0 {
-		err = w.clearLines()
+	if w.LastTypeIsProgress && w.lines > 0 {
+		err = w.ClearLines()
 		if err != nil {
 			return
 		}
 	}
 	w.lines = lines
 	_, err = w.buf.WriteTo(w.out)
+	w.LastTypeIsProgress = true
 	return
 }
 
@@ -76,9 +82,13 @@ func (w *Writer) GetWidth() (int, error) {
 	return tw, err
 }
 
+func (w *Writer) GetLineCount() int {
+	return w.lines
+}
+
 func (w *Writer) ansiCuuAndEd() error {
 	buf := make([]byte, 8)
-	buf = strconv.AppendInt(buf[:copy(buf, escOpen)], int64(w.lines), 10)
-	_, err := w.out.Write(append(buf, cuuAndEd...))
+	buf = strconv.AppendInt(buf[:copy(buf, EscOpen)], int64(w.lines), 10)
+	_, err := w.out.Write(append(buf, CuuAndEd...))
 	return err
 }
