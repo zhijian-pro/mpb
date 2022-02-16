@@ -31,6 +31,14 @@ type Progress struct {
 	once         sync.Once
 }
 
+func (p *Progress) Write(content []byte) (int, error) {
+	cwriter.CwLock.Lock()
+	defer cwriter.CwLock.Unlock()
+	n, err := os.Stdout.Write(content)
+	cwriter.LastIsProgress = false
+	return n, err
+}
+
 // pState holds bars in its priorityQueue, it gets passed to (*Progress).serve monitor goroutine.
 type pState struct {
 	bHeap       priorityQueue

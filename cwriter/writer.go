@@ -18,15 +18,18 @@ const (
 	cuuAndEd = "A\x1b[J"
 )
 
+var CwLock sync.Mutex
+var LastIsProgress bool
+
 // Writer is a buffered the writer that updates the terminal. The
 // contents of writer will be flushed when Flush is called.
 type Writer struct {
-	sync.Mutex
-	out        io.Writer
-	buf        bytes.Buffer
-	lines      int
-	fd         int
-	isTerminal bool
+	out            io.Writer
+	buf            bytes.Buffer
+	lines          int
+	fd             int
+	isTerminal     bool
+	LastIsProgress bool
 }
 
 // New returns a new Writer with defaults.
@@ -42,9 +45,9 @@ func New(out io.Writer) *Writer {
 // Flush flushes the underlying buffer.
 func (w *Writer) Flush(lines int) (err error) {
 	// some terminals interpret 'cursor up 0' as 'cursor up 1'
-	w.Lock()
-	defer w.Unlock()
-	if w.lines > 0 {
+	CwLock.Lock()
+	defer CwLock.Unlock()
+	if LastIsProgress && w.lines > 0 {
 		err = w.clearLines()
 		if err != nil {
 			return
@@ -52,6 +55,7 @@ func (w *Writer) Flush(lines int) (err error) {
 	}
 	w.lines = lines
 	_, err = w.buf.WriteTo(w.out)
+	LastIsProgress = true
 	return
 }
 
