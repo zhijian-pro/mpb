@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 	"strconv"
+	"sync"
 )
 
 // ErrNotTTY not a TeleTYpewriter error.
@@ -20,6 +21,7 @@ const (
 // Writer is a buffered the writer that updates the terminal. The
 // contents of writer will be flushed when Flush is called.
 type Writer struct {
+	sync.Mutex
 	out        io.Writer
 	buf        bytes.Buffer
 	lines      int
@@ -40,6 +42,8 @@ func New(out io.Writer) *Writer {
 // Flush flushes the underlying buffer.
 func (w *Writer) Flush(lines int) (err error) {
 	// some terminals interpret 'cursor up 0' as 'cursor up 1'
+	w.Lock()
+	defer w.Unlock()
 	if w.lines > 0 {
 		err = w.clearLines()
 		if err != nil {
