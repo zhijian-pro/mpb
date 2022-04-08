@@ -27,7 +27,7 @@ type Writer struct {
 	lineCount          int
 	fd                 int
 	isTerminal         bool
-	LastTypeIsProgress bool
+	lastTypeIsProgress bool
 }
 
 // New returns a new Writer with defaults.
@@ -40,21 +40,40 @@ func New(out io.Writer) *Writer {
 	return w
 }
 
-// Flush flushes the underlying buffer.
-func (w *Writer) Flush(lineCount int) (err error) {
+// FlushBar flushes the underlying buffer.
+func (w *Writer) FlushBar(lineCount int) (err error) {
 	w.Lock()
 	defer w.Unlock()
 	// some terminals interpret 'cursor up 0' as 'cursor up 1'
-	if w.LastTypeIsProgress && w.lineCount > 0 {
-		err = w.ClearLines()
+	if w.lastTypeIsProgress && w.lineCount > 0 {
+		err = w.clearLines()
 		if err != nil {
 			return
 		}
 	}
 	w.lineCount = lineCount
 	_, err = w.buf.WriteTo(w.out)
-	w.LastTypeIsProgress = true
+	w.lastTypeIsProgress = true
 	return
+}
+
+func (w *Writer) FlushLog(content []byte) (n int, err error) {
+	w.Lock()
+	defer w.Unlock()
+	write, err := w.Write(content)
+	// some terminals interpret 'cursor up 0' as 'cursor up 1'
+	if w.lastTypeIsProgress && w.lineCount > 0 {
+		err = w.clearLines()
+		if err != nil {
+			return
+		}
+	}
+
+	_, err = w.buf.WriteTo(w.out)
+
+	w.lineCount = bytes.Count(content, []byte("\n"))
+	w.lastTypeIsProgress = false
+	return write, err
 }
 
 // Write appends the contents of p to the underlying buffer.
